@@ -134,38 +134,6 @@ To spin up the database, backend service, and frontend client in a fully integra
    - The scheduler catches timeouts (exceeding 10s) and network connection exceptions gracefully.
    - The status badge will display **DOWN** (red) without disrupting checks on other URLs.
 
----
-
-## AWS Deployment Sketch
-
-To migrate this stack to AWS, the following serverless design is recommended:
-
-```
-[ Route 53 ] ---> [ CloudFront ] ---> [ S3 Bucket (Static Frontend) ]
-                        |
-                        +------------> [ Application Load Balancer (ALB) ]
-                                             |
-                                     [ ECS Fargate Cluster ]
-                                      ├── Backend Task (FastAPI API)
-                                      └── Scheduler Task (Or shared lifespan task)
-                                             |
-                                     [ RDS / Aurora Serverless PostgreSQL ]
-```
-
-1. **Frontend Hosting**:
-   - Build frontend assets locally or via CI/CD (`npm run build`).
-   - Sync the output `dist/` directory to an **Amazon S3** bucket configured for static web hosting.
-   - Serve static resources globally using **Amazon CloudFront** to optimize performance, manage SSL certificates (via ACM), and secure header policies.
-
-2. **Backend API & Worker**:
-   - Containerize the application and push to **AWS Elastic Container Registry (ECR)**.
-   - Run the API tasks in an **AWS ECS Fargate** cluster hidden behind an **Application Load Balancer (ALB)**.
-   - Route traffic from CloudFront `/urls` and `/health-checks` paths to the ALB target group.
-
-3. **Database**:
-   - Use **Amazon RDS PostgreSQL** or **Aurora Serverless v2** in a private subnet, accepting traffic only from the ECS task security group.
-
----
 
 ## Future Improvements
 
