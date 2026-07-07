@@ -1,10 +1,21 @@
-# Uptime Monitor
+<div align="center">
+  <h1>🟢 Uptime Monitor</h1>
+  <p><em>A simple, modular, and containerized uptime monitoring application</em></p>
 
-A simple, modular, and containerized uptime monitoring application built with **FastAPI**, **React (Vite)**, and **PostgreSQL**. The application automatically schedules and runs concurrent health checks on registered URLs every 60 seconds, recording HTTP response times, status codes, and server availability states.
+  [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
+  [![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)](https://reactjs.org/)
+  [![PostgreSQL](https://img.shields.io/badge/postgresql-4169e1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+  [![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+</div>
 
 ---
 
-## Architecture Overview
+## 📖 Overview
+The application automatically schedules and runs concurrent health checks on registered URLs every 60 seconds, recording HTTP response times, status codes, and server availability states.
+
+---
+
+## 🏛️ Architecture Overview
 
 ```mermaid
 graph TD
@@ -14,18 +25,18 @@ graph TD
     Backend -->|psycopg async| DB[(PostgreSQL)]
 ```
 
-- **Frontend**: A React application styled with Tailwind CSS, served using Nginx. Nginx acts as a reverse proxy, routing API requests to the backend container to bypass CORS issues.
-- **Backend**: A FastAPI REST API running an internal async background job scheduler using `APScheduler`.
-- **Database**: PostgreSQL storing monitored targets and historical check results.
-- **Worker/Pinger**: Inside the FastAPI lifespan, a background worker uses `httpx.AsyncClient` to asynchronously ping active targets concurrently.
+- 🎨 **Frontend**: A React application styled with Tailwind CSS, served using Nginx. Nginx acts as a reverse proxy, routing API requests to the backend container to bypass CORS issues.
+- ⚙️ **Backend**: A FastAPI REST API running an internal async background job scheduler using `APScheduler`.
+- 🗄️ **Database**: PostgreSQL storing monitored targets and historical check results.
+- 📡 **Worker/Pinger**: Inside the FastAPI lifespan, a background worker uses `httpx.AsyncClient` to asynchronously ping active targets concurrently.
 
 ---
 
-## Folder Structure
+## 📁 Folder Structure
 
-```
+```text
 uptime-monitor/
-├── app/
+├── app/                   # ⚙️ FastAPI Backend Core
 │   ├── config.py          # Settings and environment variables via Pydantic
 │   ├── database.py        # SQLAlchemy async engine, session, and table creation
 │   ├── main.py            # FastAPI entry point & lifespan (starts scheduler)
@@ -33,7 +44,7 @@ uptime-monitor/
 │   ├── routers.py         # REST API route handlers
 │   ├── schemas.py         # Pydantic validation & response schemas
 │   └── services.py        # Business logic, URL CRUD, and pinger/scheduler worker
-├── frontend/
+├── frontend/              # 🎨 React UI
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── AddURLForm.jsx  # Input form to register new URLs
@@ -45,17 +56,17 @@ uptime-monitor/
 │   ├── nginx.conf         # Router configuration & API reverse proxy
 │   ├── package.json       # Node package manager configurations
 │   └── tailwind.config.js # Styling configurations
-├── Dockerfile             # FastAPI backend image instructions
-├── docker-compose.yml     # Multi-container local orchestration manifest
-├── requirements.txt       # Backend dependencies (pinned for psycopg & FastAPI)
-└── .env.example           # Reference configuration variables
+├── Dockerfile             # 🐳 FastAPI backend image instructions
+├── docker-compose.yml     # 🐳 Multi-container local orchestration manifest
+├── requirements.txt       # 📦 Backend dependencies (pinned for psycopg & FastAPI)
+└── .env.example           # 🔐 Reference configuration variables
 ```
 
 ---
 
-## Setup & Running the Stack
+## 🚀 Setup & Running the Stack
 
-### Option A: Local Containerization (Recommended)
+### Option A: Local Containerization (Recommended) 🐳
 
 To spin up the database, backend service, and frontend client in a fully integrated stack:
 
@@ -65,13 +76,13 @@ To spin up the database, backend service, and frontend client in a fully integra
    docker compose up --build
    ```
 3. Once the build finishes and the healthchecks pass, access the resources at:
-   - **Frontend Dashboard**: [http://localhost:5173](http://localhost:5173)
-   - **FastAPI OpenAPI Swagger Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
-   - **PostgreSQL**: `localhost:5432`
+   - 🖥️ **Frontend Dashboard**: [http://localhost:5173](http://localhost:5173)
+   - 📜 **FastAPI OpenAPI Swagger Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
+   - 🗄️ **PostgreSQL**: `localhost:5432`
 
 ---
 
-### Option B: Local Manual Development
+### Option B: Local Manual Development 🛠️
 
 #### 1. Setup Backend
 1. Create and activate a Python virtual environment:
@@ -108,36 +119,37 @@ To spin up the database, backend service, and frontend client in a fully integra
 
 ---
 
-## API Endpoints
+## 🔌 API Endpoints
 
 | Method | Path | Request Body | Description |
 | :--- | :--- | :--- | :--- |
-| **POST** | `/urls` | `{ "name": "Google", "url": "https://google.com" }` | Registers a new URL to monitor. |
-| **GET** | `/urls` | *None* | Lists all monitored URLs. |
-| **DELETE** | `/urls/{id}` | *None* | Removes a monitored URL and cascades delete health records. |
-| **GET** | `/urls/{id}/health` | *None* (Optional `limit` query) | Fetches historical health checks for a specific URL. |
-| **GET** | `/health-checks` | *None* (Optional `limit` query) | Fetches the latest global checks across all sites. |
+| 🟢 **POST** | `/urls` | `{ "name": "Google", "url": "https://google.com" }` | Registers a new URL to monitor. |
+| 🔵 **GET** | `/urls` | *None* | Lists all monitored URLs. |
+| 🔴 **DELETE** | `/urls/{id}` | *None* | Removes a monitored URL and cascades delete health records. |
+| 🔵 **GET** | `/urls/{id}/health` | *None* (Optional `limit` query) | Fetches historical health checks for a specific URL. |
+| 🔵 **GET** | `/health-checks` | *None* (Optional `limit` query) | Fetches the latest global checks across all sites. |
 
 ---
 
-## Testing & Verifying States
+## 🧪 Testing & Verifying States
 
 ### How to Verify UP and DOWN States
 
-1. **Verify UP State**:
+1. ✅ **Verify UP State**:
    - Register a reliable site, such as `https://httpstat.us/200` or `https://google.com`.
    - Wait up to 60 seconds for the scheduler tick.
    - The status badge will update to **UP** (emerald green), displaying the round-trip latency in milliseconds.
 
-2. **Verify DOWN State**:
+2. ❌ **Verify DOWN State**:
    - Register an endpoint configured to fail, such as `https://httpstat.us/500`, a bad domain like `https://doesnotexist.example`, or trigger a timeout with `https://httpstat.us/200?sleep=12000`.
    - The scheduler catches timeouts (exceeding 10s) and network connection exceptions gracefully.
    - The status badge will display **DOWN** (red) without disrupting checks on other URLs.
 
+---
 
-## Future Improvements
+## 🔮 Future Improvements
 
-1. **Notification Alerts**: Integrate hooks to notify users via Webhooks, Slack, Discord, or Amazon SNS (SMS/Email) as soon as a site transition from `UP` to `DOWN` is logged.
-2. **Flexible Intervals**: Support custom check frequencies per URL (e.g. ping critical sites every 10s, secondary sites every 5m) instead of a global 60s window.
-3. **Historical Performance Visualization**: Add charting (e.g. Recharts or Chart.js) to view average latency changes and daily/weekly availability percentage scores.
-4. **User Authentication**: Secure endpoints with OAuth2 / JWT tokens so users only monitor and view their own private URL dashboards.
+1. 🔔 **Notification Alerts**: Integrate hooks to notify users via Webhooks, Slack, Discord, or Amazon SNS (SMS/Email) as soon as a site transition from `UP` to `DOWN` is logged.
+2. ⏱️ **Flexible Intervals**: Support custom check frequencies per URL (e.g. ping critical sites every 10s, secondary sites every 5m) instead of a global 60s window.
+3. 📊 **Historical Performance Visualization**: Add charting (e.g. Recharts or Chart.js) to view average latency changes and daily/weekly availability percentage scores.
+4. 🔐 **User Authentication**: Secure endpoints with OAuth2 / JWT tokens so users only monitor and view their own private URL dashboards.

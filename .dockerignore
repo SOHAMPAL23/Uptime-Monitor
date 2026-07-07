@@ -1,0 +1,37 @@
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Git
+.git/
+.gitignore
+
+# Environment variables
+.env
+.env.*
+
+# Python caching
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Frontend
+frontend/
+node_modules/
+dist/
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+
+# Docker
+docker-compose.yml
+Dockerfile
+
+# Logs and databases
+*.log
+*.sqlite3

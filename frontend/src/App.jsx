@@ -2,60 +2,67 @@ import useMonitorData from './hooks/useMonitorData'
 import { AddURLForm, URLTable, StatCard } from './components'
 
 export default function App() {
-  const { urls, checks, loading, error, countdown, handleAdd, handleDelete } = useMonitorData()
+  const { urls, loading, error, countdown, handleAdd, handleDelete } = useMonitorData()
 
-  // ── Merge URLs with their latest health check ───────────────────────────────
-  const rows = urls.map(url => {
-    const latest = checks
-      .filter(c => c.url_id === url.id)
-      .sort((a, b) => new Date(b.checked_at) - new Date(a.checked_at))[0] ?? null
-    return { ...url, latest }
-  })
-
-  const upCount   = rows.filter(r => r.latest?.is_up).length
-  const downCount = rows.filter(r => r.latest && !r.latest.is_up).length
+  // No merging required anymore! The backend optimizes this payload.
+  const upCount   = urls.filter(u => u.latest_check?.is_up).length
+  const downCount = urls.filter(u => u.latest_check && !u.latest_check.is_up).length
 
   return (
-    <div className="min-h-screen bg-slate-950 font-sans text-slate-100">
+    <div className="min-h-screen bg-[#0a0a0a] text-slate-100 font-sans selection:bg-emerald-500/30 overflow-hidden relative">
+      {/* Dynamic Background Glows */}
+      <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-emerald-600/20 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-indigo-600/10 blur-[150px] pointer-events-none" />
 
       {/* ── Header ── */}
-      <header className="sticky top-0 z-10 border-b border-slate-800 bg-slate-950/80 backdrop-blur-md">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0a0a0a]/60 backdrop-blur-xl">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5">
-            <span className="relative flex h-2.5 w-2.5">
+          <div className="flex items-center gap-3">
+            <span className="relative flex h-3 w-3">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400" />
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]" />
             </span>
-            <h1 className="text-lg font-bold tracking-tight">Uptime Monitor</h1>
+            <h1 className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+              Uptime Monitor
+            </h1>
           </div>
-          <p className="text-xs text-slate-400">
-            Refreshing in{' '}
-            <span className="font-mono font-semibold text-emerald-400">{countdown}s</span>
-          </p>
+          <div className="flex items-center gap-2 bg-white/5 rounded-full px-4 py-1.5 border border-white/10 shadow-inner">
+            <svg className="w-4 h-4 text-emerald-400 animate-spin-slow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            <p className="text-xs text-slate-300 font-medium">
+              Updating in <span className="font-mono font-bold text-emerald-400 w-4 inline-block text-center">{countdown}s</span>
+            </p>
+          </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 sm:px-6 py-8 space-y-6">
+      <main className="mx-auto max-w-6xl px-4 sm:px-6 py-10 space-y-8 relative z-10">
 
         {/* ── Stat cards ── */}
-        <div className="grid grid-cols-3 gap-3 sm:gap-4">
-          <StatCard label="Monitored" value={urls.length} />
-          <StatCard label="Up" value={upCount}   accent="emerald" />
-          <StatCard label="Down" value={downCount} accent="red" />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6">
+          <StatCard label="Total Monitored" value={urls.length} />
+          <StatCard label="Systems Operational" value={upCount} accent="emerald" />
+          <StatCard label="Outages Detected" value={downCount} accent="red" />
         </div>
 
         {/* ── Error banner ── */}
         {error && (
-          <div className="rounded-lg border border-red-800 bg-red-950/40 px-4 py-3 text-sm text-red-300">
-            ⚠ {error}
+          <div className="rounded-xl border border-red-500/50 bg-red-500/10 px-5 py-4 text-sm text-red-200 flex items-center gap-3 animate-fade-in backdrop-blur-sm shadow-[0_0_20px_rgba(239,68,68,0.15)]">
+            <svg className="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            {error}
           </div>
         )}
 
-        {/* ── Add URL form ── */}
-        <AddURLForm onAdd={handleAdd} />
+        <div className="grid lg:grid-cols-[1fr_2.5fr] gap-8 items-start">
+          {/* ── Add URL form ── */}
+          <div className="sticky top-[100px]">
+            <AddURLForm onAdd={handleAdd} />
+          </div>
 
-        {/* ── Table ── */}
-        <URLTable rows={rows} onDelete={handleDelete} loading={loading} />
+          {/* ── Table ── */}
+          <div className="w-full">
+            <URLTable rows={urls} onDelete={handleDelete} loading={loading} />
+          </div>
+        </div>
       </main>
     </div>
   )

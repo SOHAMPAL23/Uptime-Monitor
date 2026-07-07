@@ -24,7 +24,21 @@ async def add_url(db: AsyncSession, name: str, url: str) -> MonitoredURL:
 
 async def list_urls(db: AsyncSession) -> list[MonitoredURL]:
     result = await db.execute(select(MonitoredURL))
-    return list(result.scalars().all())
+    urls = list(result.scalars().all())
+
+    # Fetch the latest check for each URL using DISTINCT ON (Postgres specific)
+    checks_stmt = (
+        select(HealthCheck)
+        .distinct(HealthCheck.url_id)
+        .order_by(HealthCheck.url_id, HealthCheck.checked_at.desc())
+    )
+    checks = (await db.execute(checks_stmt)).scalars().all()
+    check_map = {c.url_id: c for c in checks}
+
+    for u in urls:
+        u.latest_check = check_map.get(u.id)
+
+    return urls
 
 async def delete_url(db: AsyncSession, url_id: str) -> bool:
     entry = await db.get(MonitoredURL, url_id)

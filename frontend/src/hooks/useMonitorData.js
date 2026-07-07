@@ -5,21 +5,16 @@ const API = import.meta.env.VITE_API_URL ?? ''
 
 export default function useMonitorData() {
   const [urls, setUrls] = useState([])
-  const [checks, setChecks] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [countdown, setCountdown] = useState(10)
   const countdownRef = useRef(10)
 
-  // ── Fetch both endpoints concurrently ───────────────────────────────────────
+  // ── Fetch URLs ──────────────────────────────────────────────────────────────
   const fetchData = useCallback(async () => {
     try {
-      const [urlsRes, checksRes] = await Promise.all([
-        axios.get(`${API}/urls`),
-        axios.get(`${API}/health-checks?limit=200`),
-      ])
-      setUrls(urlsRes.data)
-      setChecks(checksRes.data)
+      const res = await axios.get(`${API}/urls`)
+      setUrls(res.data)
       setError(null)
     } catch (err) {
       setError('Could not reach the API. Is the backend running on :8000?')
@@ -58,8 +53,7 @@ export default function useMonitorData() {
   const handleDelete = async (id) => {
     await axios.delete(`${API}/urls/${id}`)
     setUrls(prev => prev.filter(u => u.id !== id))
-    setChecks(prev => prev.filter(c => c.url_id !== id))
   }
 
-  return { urls, checks, loading, error, countdown, handleAdd, handleDelete }
+  return { urls, loading, error, countdown, handleAdd, handleDelete }
 }
