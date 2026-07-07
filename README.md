@@ -134,23 +134,7 @@ To spin up the database, backend service, and frontend client in a fully integra
    - The scheduler catches timeouts (exceeding 10s) and network connection exceptions gracefully.
    - The status badge will display **DOWN** (red) without disrupting checks on other URLs.
 
----
 
-## AWS Deployment Sketch
-
-To migrate this stack to AWS, the following serverless design is recommended:
-
-```
-[ Route 53 ] ---> [ CloudFront ] ---> [ S3 Bucket (Static Frontend) ]
-                        |
-                        +------------> [ Application Load Balancer (ALB) ]
-                                             |
-                                     [ ECS Fargate Cluster ]
-                                      ├── Backend Task (FastAPI API)
-                                      └── Scheduler Task (Or shared lifespan task)
-                                             |
-                                     [ RDS / Aurora Serverless PostgreSQL ]
-```
 
 1. **Frontend Hosting**:
    - Build frontend assets locally or via CI/CD (`npm run build`).
