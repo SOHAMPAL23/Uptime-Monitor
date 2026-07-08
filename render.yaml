@@ -1,0 +1,25 @@
+services:
+  # ── FastAPI Backend ──
+  - type: web
+    name: uptime-monitor-backend
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /docs
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+
+
+  # ── React Frontend ──
+  - type: web
+    name: uptime-monitor-frontend
+    env: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: ./frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: uptime-monitor-backend
+          envVarKey: RENDER_EXTERNAL_URL
