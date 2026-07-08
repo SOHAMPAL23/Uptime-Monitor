@@ -163,6 +163,125 @@ To instantly verify the core logic of the application locally, follow these exac
 
 ---
 
+## ☁️ Production Deployment Sketch (IaC)
+
+To host this application in a robust, scaleable production environment on AWS, we map out a cloud architecture using **ECS Fargate**, **RDS PostgreSQL**, **S3**, and **CloudFront**:
+
+```mermaid
+graph TD
+    User[Browser Client] -->|HTTPS| CF[CloudFront CDN]
+    CF -->|Static Assets| S3[(S3 Bucket)]
+    CF -->|API Traffic /urls| ALB[Application Load Balancer]
+    ALB -->|Fargate Tasks| ECS[ECS Service Backend]
+    ECS -->|Persistent Connection| RDS[(RDS Aurora Serverless PostgreSQL)]
+```
+
+### Architectural Highlights
+*   **Static Frontend (S3 + CloudFront)**: Fast, highly cached, and cost-effective delivery of the compiled React files.
+*   **Persistent Backend (ECS Fargate)**: FastAPI runs `APScheduler` in a persistent container task. Since Fargate runs continuously, it guarantees the background checking worker never sleeps (avoiding the cold-start limitations of AWS Lambda).
+*   **Managed Database (Aurora Serverless PostgreSQL)**: Auto-scaling, managed backups, and secure connection pooling.
+
+### Hypothetical Terraform Sketch
+
+Here is a simplified Terraform configuration sketching out the core service resources:
+
+```hcl
+# ── AWS PROVIDER CONFIG ──
+provider "aws" {
+  region = "us-east-1"
+}
+
+# ── DATABASE: managed aurora postgresql ──
+resource "aws_rds_cluster" "db" {
+  cluster_identifier      = "uptime-monitor-db-cluster"
+  engine                  = "aurora-postgresql"
+  engine_mode             = "serverless"
+  database_name           = "uptimedb"
+  master_username         = "dbadmin"
+  master_password         = var.db_password
+  backup_retention_period = 7
+  skip_final_snapshot     = true
+}
+
+# ── FRONTEND HOSTING: s3 & cloudfront cdn ──
+resource "aws_s3_bucket" "frontend_assets" {
+  bucket        = "uptime-monitor-production-frontend"
+  force_destroy = true
+}
+
+resource "aws_cloudfront_distribution" "cdn" {
+  origin {
+    domain_name = aws_s3_bucket.frontend_assets.bucket_regional_domain_name
+    origin_id   = "S3-Frontend"
+  }
+
+  enabled             = true
+  default_root_object = "index.html"
+
+  default_cache_behavior {
+    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "S3-Frontend"
+
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl                = 0
+    default_ttl            = 3600
+    max_ttl                = 86400
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+}
+
+# ── BACKEND: ecs cluster & fargate service ──
+resource "aws_ecs_cluster" "app_cluster" {
+  name = "uptime-monitor-cluster"
+}
+
+resource "aws_ecs_task_definition" "backend_task" {
+  family                   = "uptime-backend"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+
+  container_definitions = jsonencode([{
+    name      = "backend"
+    image     = "${var.ecr_repository_url}:latest"
+    essential = true
+    portMappings = [{
+      containerPort = 8000
+      hostPort      = 8000
+    }]
+    environment = [
+      { name = "DATABASE_URL", value = "postgresql+psycopg://dbadmin:${var.db_password}@${aws_rds_cluster.db.endpoint}/uptimedb" }
+    ]
+  }])
+}
+
+resource "aws_ecs_service" "backend_service" {
+  name            = "uptime-backend-service"
+  cluster         = aws_ecs_cluster.app_cluster.id
+  task_definition = aws_ecs_task_definition.backend_task.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets          = var.subnet_ids
+    assign_public_ip = true
+  }
+}
+```
+
+---
+
 ## 🔮 Future Improvements
 
 1.  **Notification Alerts**: Integrate hooks to notify users via Webhooks, Slack, Discord, or Amazon SNS (SMS/Email) as soon as a site transition from `UP` to `DOWN` is logged.
