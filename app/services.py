@@ -74,9 +74,9 @@ async def _ping_icmp(target_url: str) -> tuple[int | None, float | None, bool]:
     start = time.monotonic()
     try:
         if sys.platform == "win32":
-            ping_cmd = ["ping", "-n", "1", "-w", "2000", target_url]
+            ping_cmd = ["ping", "-n", "1", "-w", "1000", target_url]
         else:
-            ping_cmd = ["ping", "-c", "1", "-W", "2", target_url]
+            ping_cmd = ["ping", "-c", "1", "-W", "1", target_url]
 
         proc = await asyncio.create_subprocess_exec(
             *ping_cmd,
@@ -99,8 +99,9 @@ async def _ping_icmp(target_url: str) -> tuple[int | None, float | None, bool]:
         log.error("❌ PING Unexpected error  url=%s  exc=%r", target_url, exc)
         return None, None, False
 
+
 async def _ping_http(client: httpx.AsyncClient, target_url: str) -> tuple[int | None, float | None, bool]:
-    """Perform an HTTP GET request."""
+    """Perform an HTTP request (HEAD with GET fallback)."""
     start = time.monotonic()
     
     # Map localhost to host.docker.internal for local docker testing
@@ -108,7 +109,14 @@ async def _ping_http(client: httpx.AsyncClient, target_url: str) -> tuple[int | 
         target_url = target_url.replace("localhost", "host.docker.internal").replace("127.0.0.1", "host.docker.internal")
 
     try:
-        resp = await client.get(target_url, follow_redirects=True)
+        # Try HEAD request first for speed
+        try:
+            resp = await client.head(target_url, follow_redirects=True)
+            if resp.status_code in (405, 501):
+                resp = await client.get(target_url, follow_redirects=True)
+        except Exception:
+            resp = await client.get(target_url, follow_redirects=True)
+
         elapsed = time.monotonic() - start
         response_time_ms = round(elapsed * 1000, 2)
         
@@ -129,6 +137,7 @@ async def _ping_http(client: httpx.AsyncClient, target_url: str) -> tuple[int | 
     except Exception as exc:
         log.error("❌ Unexpected error  url=%s  exc=%r", target_url, exc)
         return None, None, False
+
 
 async def ping_url(db: AsyncSession, entry: MonitoredURL, client: httpx.AsyncClient) -> None:
     """Ping a single URL and save a HealthCheck row."""
@@ -169,10 +178,11 @@ async def run_checks(session_factory) -> None:
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         }
-        async with httpx.AsyncClient(timeout=httpx.Timeout(10.0), headers=headers) as client:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(4.0), headers=headers) as client:
             await asyncio.gather(*[_check(u, client) for u in urls], return_exceptions=True)
             
         log.info("✔ Health checks complete — %d URLs checked", len(urls))
 
     except Exception as exc:
         log.error("💥 Scheduler run failed: %r", exc)
+

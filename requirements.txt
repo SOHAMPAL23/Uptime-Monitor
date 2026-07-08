@@ -5,3 +5,5 @@ psycopg[binary]          # async postgres driver — works on Windows with SSL
 httpx
 apscheduler
 pydantic-settings
+aiosqlite
+
