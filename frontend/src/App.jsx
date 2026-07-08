@@ -2,7 +2,7 @@ import useMonitorData from './hooks/useMonitorData'
 import { AddURLForm, URLTable, StatCard } from './components'
 
 export default function App() {
-  const { urls, loading, error, handleAdd, handleDelete } = useMonitorData()
+  const { urls, loading, error, countdown, handleAdd, handleDelete } = useMonitorData()
 
   // No merging required anymore! The backend optimizes this payload.
   const upCount   = urls.filter(u => u.latest_check?.is_up).length
@@ -21,6 +21,15 @@ export default function App() {
             <h1 className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
               Uptime Monitor
             </h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[11px] font-bold text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.1)] flex items-center gap-1.5 backdrop-blur-md">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+              </span>
+              Auto-checking in {countdown}s
+            </span>
           </div>
         </div>
       </header>

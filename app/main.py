@@ -26,6 +26,11 @@ scheduler = AsyncIOScheduler()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()                                          # create tables on startup
+    
+    # Run checks immediately on startup in the background so we have data right away
+    import asyncio
+    asyncio.create_task(run_checks(SessionLocal))
+    
     scheduler.add_job(run_checks, "interval", seconds=60, args=[SessionLocal])
     scheduler.start()
     logging.getLogger(__name__).info("⚡ Scheduler started — checks every 60 s")

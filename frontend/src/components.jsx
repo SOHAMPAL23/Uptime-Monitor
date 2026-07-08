@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 // ── Stat Card ──────────────────────────────────────────────────────────────────
 export function StatCard({ label, value, accent }) {
@@ -126,7 +126,7 @@ function StatusBadge({ isUp, pending }) {
     return (
       <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.1)]">
         <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_5px_rgba(16,185,129,0.8)]" />
-        Operational
+        UP
       </span>
     )
   }
@@ -136,7 +136,7 @@ function StatusBadge({ isUp, pending }) {
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
         <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.8)]" />
       </span>
-      Down
+      DOWN
     </span>
   )
 }
@@ -157,9 +157,30 @@ function ResponseTime({ ms }) {
 }
 
 function TimeAgo({ isoString }) {
+  const [now, setNow] = useState(Date.now())
+
+  useEffect(() => {
+    if (!isoString) return
+    const timer = setInterval(() => {
+      setNow(Date.now())
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [isoString])
+
   if (!isoString) return <span className="text-slate-600 text-xs font-medium">Never</span>
-  const date = new Date(isoString)
-  const diff = Math.floor((Date.now() - date.getTime()) / 1000)
+  
+  // SQLite stores datetime as naive strings without 'Z' or '+00:00'.
+  // We normalize spaces to 'T' and append 'Z' to force UTC parsing in the browser.
+  let dateStr = isoString
+  if (dateStr.includes(' ')) {
+    dateStr = dateStr.replace(' ', 'T')
+  }
+  if (!dateStr.endsWith('Z') && !/\+\d{2}:\d{2}$/.test(dateStr)) {
+    dateStr += 'Z'
+  }
+
+  const date = new Date(dateStr)
+  const diff = Math.floor((now - date.getTime()) / 1000)
   let label
   if (diff < 10)   label = 'Just now'
   else if (diff < 60)   label = `${diff}s ago`

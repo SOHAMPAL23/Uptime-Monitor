@@ -22,16 +22,24 @@ export default function useMonitorData() {
     }
   }, [])
 
-  // ── Auto-refresh every 60 s ────────────────────────────────
+  const [countdown, setCountdown] = useState(60)
+
+  // ── Auto-refresh & Countdown ──────────────────────────────
   useEffect(() => {
     fetchData()
 
-    const refreshInterval = setInterval(() => {
-      fetchData()
-    }, 60_000)
+    const timer = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          fetchData()
+          return 60
+        }
+        return prev - 1
+      })
+    }, 1000)
 
     return () => {
-      clearInterval(refreshInterval)
+      clearInterval(timer)
     }
   }, [fetchData])
 
@@ -39,6 +47,7 @@ export default function useMonitorData() {
   const handleAdd = async ({ name, url }) => {
     await axios.post(`${API}/urls`, { name, url })
     fetchData()
+    setCountdown(60) // Reset countdown on manual add
   }
 
   const handleDelete = async (id) => {
@@ -46,5 +55,5 @@ export default function useMonitorData() {
     setUrls(prev => prev.filter(u => u.id !== id))
   }
 
-  return { urls, loading, error, handleAdd, handleDelete }
+  return { urls, loading, error, countdown, handleAdd, handleDelete }
 }
