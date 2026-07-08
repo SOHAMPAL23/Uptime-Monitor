@@ -131,23 +131,43 @@ To spin up the database, backend service, and frontend client in a fully integra
 
 ---
 
-##  Testing & Verifying States
+## 🧪 Testing & Verifying States
 
 ### How to Verify UP and DOWN States
 
-1.  **Verify UP State**:
-   - Register a reliable site, such as `https://httpstat.us/200` or `https://google.com`.
-   - Wait up to 60 seconds for the scheduler tick.
-   - The status badge will update to **UP** (emerald green), displaying the round-trip latency in milliseconds.
+To instantly verify the core logic of the application locally, follow these exact steps:
 
-2.  **Verify DOWN State**:
-   - Register an endpoint configured to fail, such as `https://httpstat.us/500`, a bad domain like `https://doesnotexist.example`, or trigger a timeout with `https://httpstat.us/200?sleep=12000`.
-   - The scheduler catches timeouts (exceeding 10s) and network connection exceptions gracefully.
-   - The status badge will display **DOWN** (red) without disrupting checks on other URLs.
+1. **Verify UP State**:
+   - Open the dashboard at `http://localhost:5173`.
+   - In the "Register Endpoint" form, add a healthy URL: `https://example.com`.
+   - Wait for the scheduler tick (within 10-60 seconds depending on cycle).
+   - The status badge will update to **Operational** (UP) in emerald green, displaying the round-trip latency.
+
+2. **Verify DOWN State**:
+   - In the form, register an unreachable or invalid domain, such as `https://this-is-a-fake-unreachable-domain.local` or `https://httpstat.us/500`.
+   - Wait for the scheduler tick. The background pinger catches the connection error or timeout gracefully.
+   - The status badge will update to **Down** in red, without disrupting the checks on your healthy URLs.
 
 ---
 
-##  Future Improvements
+## ☁️ Deployment Sketch (Light) - Vercel & Render
+
+To deploy this MVP application to a cloud provider quickly:
+
+1. **Frontend (Vercel)**: 
+   - Connect the GitHub repository to **Vercel**.
+   - Set the framework preset to `Vite`.
+   - Configure the environment variable `VITE_API_URL` to point to the production backend URL.
+   - Vercel will automatically build and serve the static React assets globally on its Edge Network.
+
+2. **Backend (Render / Railway)**:
+   - Deploy the FastAPI backend as a Web Service on a provider like **Render** or **Railway**.
+   - Since the backend runs a continuous background job (`APScheduler`), you need an environment that allows persistent background processes (Vercel Serverless functions are generally not suited for persistent schedulers because they spin down).
+   - Provision a managed PostgreSQL instance (e.g., Neon DB, Supabase, or Render Postgres) and provide the `DATABASE_URL` to the backend.
+
+---
+
+## 🔮 Future Improvements
 
 1.  **Notification Alerts**: Integrate hooks to notify users via Webhooks, Slack, Discord, or Amazon SNS (SMS/Email) as soon as a site transition from `UP` to `DOWN` is logged.
 2.  **Flexible Intervals**: Support custom check frequencies per URL (e.g. ping critical sites every 10s, secondary sites every 5m) instead of a global 60s window.

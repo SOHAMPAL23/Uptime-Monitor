@@ -12,6 +12,7 @@ from fastapi import FastAPI
 from app.database import SessionLocal, init_db
 from app.routers import router
 from app.services import run_checks
+from fastapi.middleware.cors import CORSMiddleware
 
 logging.basicConfig(
     level=logging.INFO,
@@ -34,4 +35,13 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Uptime Monitor", lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
+
 app.include_router(router)
