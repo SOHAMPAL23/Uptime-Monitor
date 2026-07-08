@@ -2,7 +2,7 @@ import useMonitorData from './hooks/useMonitorData'
 import { AddURLForm, URLTable, StatCard } from './components'
 
 export default function App() {
-  const { urls, loading, error, countdown, handleAdd, handleDelete } = useMonitorData()
+  const { urls, loading, error, handleAdd, handleDelete } = useMonitorData()
 
   // No merging required anymore! The backend optimizes this payload.
   const upCount   = urls.filter(u => u.latest_check?.is_up).length
@@ -18,19 +18,9 @@ export default function App() {
       <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0a0a0a]/60 backdrop-blur-xl">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]" />
-            </span>
             <h1 className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
               Uptime Monitor
             </h1>
-          </div>
-          <div className="flex items-center gap-2 bg-white/5 rounded-full px-4 py-1.5 border border-white/10 shadow-inner">
-            <svg className="w-4 h-4 text-emerald-400 animate-spin-slow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-            <p className="text-xs text-slate-300 font-medium">
-              Updating in <span className="font-mono font-bold text-emerald-400 w-4 inline-block text-center">{countdown}s</span>
-            </p>
           </div>
         </div>
       </header>

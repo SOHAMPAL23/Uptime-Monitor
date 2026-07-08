@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 
 const API = import.meta.env.VITE_API_URL ?? ''
@@ -7,8 +7,6 @@ export default function useMonitorData() {
   const [urls, setUrls] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [countdown, setCountdown] = useState(10)
-  const countdownRef = useRef(10)
 
   // ── Fetch URLs ──────────────────────────────────────────────────────────────
   const fetchData = useCallback(async () => {
@@ -23,24 +21,16 @@ export default function useMonitorData() {
     }
   }, [])
 
-  // ── Auto-refresh every 10 s + live countdown ────────────────────────────────
+  // ── Auto-refresh every 60 s ────────────────────────────────
   useEffect(() => {
     fetchData()
 
     const refreshInterval = setInterval(() => {
       fetchData()
-      countdownRef.current = 10
-      setCountdown(10)
-    }, 10_000)
-
-    const tickInterval = setInterval(() => {
-      countdownRef.current -= 1
-      setCountdown(countdownRef.current)
-    }, 1_000)
+    }, 60_000)
 
     return () => {
       clearInterval(refreshInterval)
-      clearInterval(tickInterval)
     }
   }, [fetchData])
 
@@ -55,5 +45,5 @@ export default function useMonitorData() {
     setUrls(prev => prev.filter(u => u.id !== id))
   }
 
-  return { urls, loading, error, countdown, handleAdd, handleDelete }
+  return { urls, loading, error, handleAdd, handleDelete }
 }
