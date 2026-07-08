@@ -66,6 +66,19 @@ uptime-monitor/
 
 ## 🚀 Setup & Running the Stack
 
+### 🗄️ Database Choices & Configurations
+The application supports three database setups. You can easily switch between them by configuring the `DATABASE_URL` in your `.env` file:
+
+1. **Local PostgreSQL Container (Offline Dev)**:
+   * **In Docker (Option A)**: If you run Docker Compose, it automatically spins up a local database container (`db`). If `DATABASE_URL` is empty, commented out, or not set in your `.env` file, the backend container will automatically connect to this local container.
+   * **Directly on Host (Option B)**: If you run the API manually, set `DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/uptime` in `.env` to connect to the active Docker container DB.
+2. **Neon DB (Production / Cloud)**:
+   * Set `DATABASE_URL` in your `.env` to your remote Neon connection string. Both your local runner and container will connect directly to Neon.
+3. **Graceful SQLite Fallback**:
+   * If you configure Neon DB, but your local network or firewall blocks port `5432` (a common issue on some home routers/ISPs), the backend watchdog will detect the block and **automatically fall back to a local SQLite database (`uptime.db`) within 2 seconds**. The app will never crash on boot!
+
+---
+
 ### Option A: Local Containerization (Recommended) 
 
 To spin up the database, backend service, and frontend client in a fully integrated stack:
@@ -147,23 +160,6 @@ To instantly verify the core logic of the application locally, follow these exac
    - In the form, register an unreachable or invalid domain, such as `https://this-is-a-fake-unreachable-domain.local` or `https://httpstat.us/500`.
    - Wait for the scheduler tick. The background pinger catches the connection error or timeout gracefully.
    - The status badge will update to **Down** in red, without disrupting the checks on your healthy URLs.
-
----
-
-## ☁️ Deployment Sketch (Light) - Vercel & Render
-
-To deploy this MVP application to a cloud provider quickly:
-
-1. **Frontend (Vercel)**: 
-   - Connect the GitHub repository to **Vercel**.
-   - Set the framework preset to `Vite`.
-   - Configure the environment variable `VITE_API_URL` to point to the production backend URL.
-   - Vercel will automatically build and serve the static React assets globally on its Edge Network.
-
-2. **Backend (Render / Railway)**:
-   - Deploy the FastAPI backend as a Web Service on a provider like **Render** or **Railway**.
-   - Since the backend runs a continuous background job (`APScheduler`), you need an environment that allows persistent background processes (Vercel Serverless functions are generally not suited for persistent schedulers because they spin down).
-   - Provision a managed PostgreSQL instance (e.g., Neon DB, Supabase, or Render Postgres) and provide the `DATABASE_URL` to the backend.
 
 ---
 

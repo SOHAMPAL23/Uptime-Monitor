@@ -11,7 +11,8 @@ export default function useMonitorData() {
   // ── Fetch URLs ──────────────────────────────────────────────────────────────
   const fetchData = useCallback(async () => {
     try {
-      const res = await axios.get(`${API}/urls`)
+      // Add a cache-buster query parameter to prevent browser caching of API responses
+      const res = await axios.get(`${API}/urls?t=${Date.now()}`)
       setUrls(res.data)
       setError(null)
     } catch (err) {

@@ -26,9 +26,9 @@ scheduler = AsyncIOScheduler()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()                                          # create tables on startup
-    scheduler.add_job(run_checks, "interval", seconds=10, args=[SessionLocal])
+    scheduler.add_job(run_checks, "interval", seconds=60, args=[SessionLocal])
     scheduler.start()
-    logging.getLogger(__name__).info("⚡ Scheduler started — checks every 10 s")
+    logging.getLogger(__name__).info("⚡ Scheduler started — checks every 60 s")
     yield
     scheduler.shutdown()
     logging.getLogger(__name__).info("🛑 Scheduler stopped")
